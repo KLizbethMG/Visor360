@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8"> <!-- Establece codificación de caracteres UTF-8 -->
+    <title>Visor 360 Interactivo</title> <!-- Título de la pestaña del navegador -->
+
+    <!-- Carga la librería de A-Frame desde su CDN oficial -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Estilo CSS para el menú de botones -->
+    <style>
+      :root {
+        --primary-color: #2196F3;
+        --hover-color: #1976D2;
+        --text-color: #ffffff;
+        --menu-bg: rgba(33, 33, 33, 0.85);
+        --button-bg: rgba(255, 255, 255, 0.1);
+        --button-hover: rgba(255, 255, 255, 0.2);
+        --transition-speed: 0.3s;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        overflow: hidden;
+      }
+ 
+      #menu {
+        position: absolute;
+        top: 50%;
+        left: 30px;
+        transform: translateY(-50%);
+        z-index: 999;
+        background: var(--menu-bg);
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 200px;
+      }
+
+      .menu-title {
+        color: var(--text-color);
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.4em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        padding-bottom: 10px;
+      }
+
+      .menu-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 3px;
+        background: var(--primary-color);
+        border-radius: 2px;
+      }
+
+      button {
+        background: var(--button-bg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+        padding: 15px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all var(--transition-speed) ease;
+        min-width: 180px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: 0.5s;
+      }
+
+      button:hover::before {
+        left: 100%;
+      }
+
+      button:hover {
+        background: var(--button-hover);
+        transform: translateX(5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      button:active {
+        transform: translateX(2px);
+      }
+
+      button.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+      }
+
+      .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .loading-text {
+        color: var(--text-color);
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 1px;
+      }
+
+      /* Efecto de brillo en los botones */
+      @keyframes shine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
+      }
+
+      button::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        background-size: 200% 100%;
+        animation: shine 3s infinite;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Menú con botones para cambiar de imagen -->
+    <div id="menu">
+      <div class="menu-title">Escenas Disponibles</div>
+      <button onclick="cambiarImagen('Centro_computo.jpg')" class="active">Centro_computo</button>
+      <button onclick="cambiarImagen('Lab_Ambiental.jpg')">Lab_Ambiental</button>
+      <button onclick="cambiarImagen('Lab_Bioquímica.jpg')">Lab_Bioquímica</button>
+      <button onclick="cambiarImagen('Lab_Electro.jpg')">Lab_Electro</button>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div style="text-align: center;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando escena...</div>
+      </div>
+    </div>
+
+    <!-- Escena principal de A-Frame -->
+    <a-scene>
+      <!-- Componente tipo cielo (sky), donde se muestra la imagen 360° -->
+      <!-- Tiene un ID para poder cambiar dinámicamente su imagen -->
+      <!-- La rotación es opcional, aquí gira un poco el punto inicial de vista -->
+      <a-sky id="panorama" src="imagen1.jpg" rotation="0 -130 0"></a-sky>
+    </a-scene>
+
+    <!-- Script en JavaScript para cambiar la imagen panorámica -->
+    <script>
+      // Lista de imágenes a precargar
+      const imagenes = [
+        'Estacionamiento.jpg',
+        'Campo.jpg',
+        'Laboratorio.jpg',
+        'Biblioteca.jpg'
+      ];
+
+      // Precarga de imágenes
+      function precargarImagenes() {
+        imagenes.forEach(src => {
+          const img = new Image();
+          img.src = src;
+        });
+      }
+
+      // Mostrar/ocultar overlay de carga
+      function toggleLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = show ? 'flex' : 'none';
+      }
+
+      // Función mejorada para cambiar la imagen
+      function cambiarImagen(src) {
+        toggleLoading(true);
+        
+        // Crear una nueva imagen para precargar
+        const img = new Image();
+        img.onload = function() {
+          document.getElementById('panorama').setAttribute('src', src);
+          toggleLoading(false);
+          
+          // Actualizar el estado activo de los botones
+          const buttons = document.querySelectorAll('button');
+          buttons.forEach(button => {
+            button.classList.remove('active');
+            if (button.onclick.toString().includes(src)) {
+              button.classList.add('active');
+            }
+          });
+        };
+
+        img.onerror = function() {
+          console.error('Error al cargar la imagen:', src);
+          toggleLoading(false);
+          alert('Error al cargar la imagen. Por favor, intente nuevamente.');
+        };
+
+        img.src = src;
+      }
+
+      // Precargar imágenes cuando se carga la página
+      window.addEventListener('load', precargarImagenes);
+    </script>
+  </body>
+</html>
